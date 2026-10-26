@@ -1,0 +1,31 @@
+import { getBooks } from './booksApi';
+import { createAppStore } from '../app/store';
+import { fetchBooks } from '../features/books/booksSlice';
+afterEach(() => jest.useRealTimers());
+test('API chờ đủ 500ms và có nhánh lỗi', async () => {
+  jest.useFakeTimers();
+  const done = jest.fn();
+  const request = getBooks().then(done);
+  await jest.advanceTimersByTimeAsync(499);
+  expect(done).not.toHaveBeenCalled();
+  await jest.advanceTimersByTimeAsync(1);
+  await request;
+  expect(done).toHaveBeenCalledWith(expect.objectContaining({ ok: true }));
+  const error = getBooks(true);
+  await jest.advanceTimersByTimeAsync(500);
+  expect(await error).toEqual({ ok: false, error: expect.any(String) });
+});
+test('thunk chuyển loading, failed và retry thành công', async () => {
+  jest.useFakeTimers();
+  const store = createAppStore();
+  const failure = store.dispatch(fetchBooks(true));
+  expect(store.getState().books.status).toBe('loading');
+  await jest.advanceTimersByTimeAsync(500);
+  await failure;
+  expect(store.getState().books.status).toBe('failed');
+  const retry = store.dispatch(fetchBooks(false));
+  await jest.advanceTimersByTimeAsync(500);
+  await retry;
+  expect(store.getState().books.status).toBe('succeeded');
+  expect(store.getState().books.items.length).toBeGreaterThan(0);
+});

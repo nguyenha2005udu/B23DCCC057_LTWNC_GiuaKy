@@ -1,0 +1,1 @@
+module.exports = { watchman: false, testEnvironment: 'jsdom', setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'], transform: { '^.+\\.tsx?$': ['ts-jest', { tsconfig: { module: 'CommonJS', moduleResolution: 'Node', jsx: 'react-jsx', esModuleInterop: true } }] } };
